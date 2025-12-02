@@ -226,6 +226,53 @@ app.get("/todos", async (req: Request, res: Response) => {
 	}
 });
 
+app.put("/todos/:id", async (req: Request, res: Response) => {
+	const { title, description } = req.body;
+	try {
+		const result = await pool.query(
+			`UPDATE todos SET title=$1, description=$2 WHERE id=$3 RETURNING *`,
+			[title, description, req.params.id]
+		);
+
+		res.status(200).json({
+			success: true,
+			message: "Todo updated successfully!",
+			data: result.rows[0],
+		});
+	} catch (error) {
+		res.status(500).json({
+			success: false,
+			message: (error as Error).message,
+			details: error,
+		});
+	}
+});
+
+// get single todo
+app.get("/todos/:id", async (req: Request, res: Response) => {
+	try {
+		const result = await pool.query(`SELECT * FROM todos WHERE id = $1`, [req.params.id]);
+		if (result.rows.length === 0) {
+			res.status(404).json({
+				success: false,
+				message: "Todo not found",
+			});
+		} else {
+			res.status(200).json({
+				success: true,
+				message: "Successfully retrieved todo",
+				data: result.rows,
+			});
+		}
+	} catch (error) {
+		res.status(500).json({
+			success: false,
+			message: (error as Error).message,
+			details: error,
+		});
+	}
+});
+
 // 404 not found routes
 app.use((req: Request, res: Response) => {
 	res.status(404).json({
