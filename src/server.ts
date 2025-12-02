@@ -273,6 +273,58 @@ app.get("/todos/:id", async (req: Request, res: Response) => {
 	}
 });
 
+// get single user's todos
+app.get("/todos/user/:user_id", async (req: Request, res: Response) => {
+	try {
+		const result = await pool.query(`SELECT * FROM todos WHERE user_id=$1`, [req.params.user_id]);
+
+		if (result.rows.length === 0) {
+			res.status(404).json({
+				success: false,
+				message: "Todos not found for this users",
+			});
+		} else {
+			res.status(200).json({
+				success: true,
+				message: `${result.rows.length} todos found for this user!`,
+				data: result.rows,
+			});
+		}
+	} catch (error) {
+		res.status(500).json({
+			success: false,
+			message: (error as Error).message,
+			details: error,
+		});
+	}
+});
+
+// delete todos
+app.delete("/todos/:id", async (req: Request, res: Response) => {
+	try {
+		const result = await pool.query(`DELETE FROM todos WHERE id=$1`, [req.params.id]);
+
+		if (result.rowCount === 0) {
+			res.status(404).json({
+				success: false,
+				message: "Todo not found",
+			});
+		} else {
+			res.status(200).json({
+				success: true,
+				message: "Todo deleted successfully!",
+				data: result.rows,
+			});
+		}
+	} catch (error) {
+		res.status(500).json({
+			success: false,
+			message: (error as Error).message,
+			details: error,
+		});
+	}
+});
+
 // 404 not found routes
 app.use((req: Request, res: Response) => {
 	res.status(404).json({
